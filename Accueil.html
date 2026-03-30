@@ -6688,7 +6688,7 @@ async function loadProformaCatalogueData() {
 
         // Charger les options de prescription (sphere, cylindre, axe, add)
         const sphereOptions = data.data.sphere || [];
-        const cylindreOptions = data.data.cylindre || [];
+        const cylindreOptions = data.data.sphere || [];// les meme donné que la sphere
         const axeOptions = data.data.axe || [];
         const addOptions = data.data.add || [];
 
@@ -6936,19 +6936,13 @@ async function checkAndOpenProformaPDF() {
             return;
         }
         
-if (pdfUrl) {
-    closeModal();
-    
-    // Convertir l'URL Google Drive en lien direct
-    const fileId = pdfUrl.match(/\/d\/(.*?)\/|file\/d\/(.*?)(\/|$)/);
-    if (fileId) {
-        const directUrl = `https://drive.google.com/uc?export=download&id=${fileId[1] || fileId[2]}`;
-        window.open(directUrl, '_blank');
-        showSuccess("PDF généré avec succès !");
-    } else {
-        window.open(pdfUrl, '_blank');
-    }
-}
+
+        if (pdfUrl) {
+            console.log("📄 Ouverture du PDF:", pdfUrl);
+            closeModal();
+            window.open(pdfUrl, '_blank');
+            alert("PDF généré avec succès! Ouverture dans un nouvel onglet.");
+        }
         
     } catch (error) {
         console.error("❌ Erreur ouverture PDF:", error);
@@ -6961,7 +6955,6 @@ if (pdfUrl) {
         window.location.href = 'Accueil.html';
 
     }
-
         // STATUS MESSAGES
         function showSendingStatus() {
             const overlay = document.createElement('div');
