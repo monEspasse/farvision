@@ -3685,11 +3685,11 @@ async function loadCompanyInfo() {
                     <span class="bc-client-id">(${c.clientId})</span>
                 </div>
                 <div class="bc-client-details">
-                    <span class="bc-detail-label">Verres:</span> ${escapeHtml(c.typeVerre)}
+                    <span class="bc-detail-label">Verres à commender:</span> ${escapeHtml(typeCommandeClient)}
                 </div>
             </div>
             <div class="bc-commande-info">
-                <div><span class="bc-detail-label">Verres:</span> ${escapeHtml(typeCommandeClient)}</div>
+                <div><span class="bc-detail-label">Verres à commender:</span> ${escapeHtml(typeCommandeClient)}</div>
                 <div><span class="bc-detail-label">Livraison prévue:</span> ${dlF}</div>
                 
             </div>
@@ -4058,7 +4058,7 @@ async function ouvrirModalVenteClient(clientId) {
 
                 clinique: client['Clinique'] || '',
                 ophtalmo: client['Ophtalmo'] || '',
-                date_soin: fixDateString(client['Date de Soin'] || ''),
+                date_soin: client['Date de Soin'] || '',
 
                 montant_monture: client['Montant Monture (FCFA)'] || 0,
                 montant_verres: client['Montant Verres (FCFA)'] || 0,
@@ -4101,18 +4101,19 @@ async function ouvrirModalVenteClient(clientId) {
     }
 }
 
-function fixDateString(dateString) {
+function formatDateForInput(dateString) {
     if (!dateString) return '';
     try {
-        if (dateString.startsWith('0226')) {
-            dateString = '2026' + dateString.substring(4);
-        }
+        // Cas ISO string "2026-02-27T00:00:00.000Z"
         const date = new Date(dateString);
-        if (!isNaN(date.getTime())) return date.toISOString();
-        return '';
-    } catch(e) {
-        return '';
-    }
+        if (!isNaN(date.getTime())) {
+            return date.toISOString().split('T')[0]; // "YYYY-MM-DD"
+        }
+        // Cas format "DD/MM/YYYY"
+        const parts = dateString.split('/');
+        if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    } catch (e) { /* ignore */ }
+    return '';
 }
 
 function creerModalVenteAvecPreRemplissage(clientData) {
@@ -4292,7 +4293,6 @@ function generateSaleModalHTML() {
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Assurance</label>
-                                <!-- BUG #1 CORRIGÉ : select au lieu de div -->
                                 <select name="assurance" id="assurance" class="form-control"></select>
                                 <input type="text" id="assurance_input" class="form-control" style="display:none; margin-top:5px;" placeholder="Ajouter assurance">
                                 <button type="button" class="btn-small" onclick="toggleCustomInputVente('assurance')" style="margin-top:5px;">+ Ajouter</button>
@@ -4638,9 +4638,6 @@ async function initSaleModalWithAllData(clientData) {
         // Retirer l'ancien listener avant d'en ajouter un nouveau
         agenceEl.onchange = () => loadMonturesForAgenceVente();
     }
-
-    // BUG #3 CORRIGÉ : suppression de setupPrescriptionSyncVente qui causait l'écrasement OD↔OG
-    // La synchronisation automatique OD/OG n'est pas un comportement attendu pour une prescription
 }
 
 function setPrescriptionValue(elementId, value) {
@@ -4792,8 +4789,6 @@ function updateContactFieldsVente() {
     }
 }
 
-// BUG #3 CORRIGÉ : setupPrescriptionSyncVente supprimée — la synchro automatique OD↔OG
-// écrasait les valeurs de prescription et n'était pas un comportement attendu.
 
 function resetSaleForm() {
     if (confirm('Réinitialiser le formulaire ?')) {
@@ -4814,7 +4809,6 @@ function resetSaleForm() {
 }
 
 async function submitSaleForm(clientId) {
-    // BUG #7 CORRIGÉ : validation de toutes les étapes, pas seulement la 4
     for (let step = 1; step <= 4; step++) {
         if (!validateStep(step)) return;
     }
